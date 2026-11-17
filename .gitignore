@@ -1,0 +1,8 @@
+# Build output & runtime data
+standalone/out/
+*.obj
+build_log.txt
+island.ini
+island.log
+storage/
+prof.out

@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dynamic Island for Windows — Settings</title>
+<style>
+  :root{
+    --bg:#09090c; --bg2:#0f1016; --surface:#14151d; --surface2:#1b1d28; --line:#262938;
+    --text:#f2f3f8; --muted:#9aa0b8; --dim:#676d86; --accent:#4cc9f0; --accent2:#7c5cff;
+    --ok:#34c759; --warn:#ffb020; --danger:#ff5c6a; --radius:14px;
+    --shadow:0 12px 40px rgba(0,0,0,.35);
+  }
+  *{box-sizing:border-box}
+  html{color-scheme:dark}
+  body{margin:0;font:14px/1.45 "Segoe UI Variable Text","Segoe UI",system-ui,sans-serif;color:var(--text);
+    background:radial-gradient(1200px 500px at 15% -10%, rgba(76,201,240,.12), transparent 60%),
+               radial-gradient(900px 500px at 100% 0%, rgba(124,92,255,.10), transparent 55%), var(--bg);}
+  a{color:var(--accent)}
+  .app{display:grid;grid-template-columns:260px 1fr;min-height:100vh}
+  .side{position:sticky;top:0;height:100vh;padding:22px 16px;border-right:1px solid var(--line);background:linear-gradient(180deg,rgba(20,21,29,.9),rgba(9,9,12,.7));backdrop-filter:blur(12px);overflow:auto}
+  .brand{display:flex;gap:12px;align-items:center;padding:4px 8px 18px}
+  .logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(160deg,#1f2333,#10121a);display:grid;place-items:center;box-shadow:inset 0 0 0 1px rgba(255,255,255,.08), 0 8px 24px rgba(76,201,240,.12)}
+  .logo i{width:22px;height:10px;border-radius:10px;background:linear-gradient(90deg,#fff,#9be7ff);display:block}
+  .brand h1{font:600 15px/1.15 "Segoe UI Variable Display","Segoe UI",sans-serif;margin:0}
+  .brand p{margin:2px 0 0;color:var(--muted);font-size:12px}
+  .nav button{width:100%;display:flex;align-items:center;gap:10px;padding:9px 10px;margin:2px 0;border:0;border-radius:10px;background:transparent;color:var(--muted);font:inherit;text-align:left;cursor:pointer}
+  .nav button:hover{background:rgba(255,255,255,.04);color:var(--text)}
+  .nav button.on{background:rgba(76,201,240,.12);color:#dff7ff;box-shadow:inset 0 0 0 1px rgba(76,201,240,.18)}
+  .nav .dot{width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.55;flex:none}
+  .side .meta{margin-top:16px;padding:14px 10px 6px;color:var(--dim);font-size:12px;border-top:1px solid var(--line)}
+  .side .meta b{color:var(--muted);font-weight:600}
+  .main{padding:22px 26px 40px;max-width:1100px}
+  .top{display:flex;gap:12px;align-items:center;flex-wrap:wrap;position:sticky;top:0;z-index:5;padding:4px 0 16px;margin-bottom:6px;background:linear-gradient(180deg,var(--bg) 60%,rgba(9,9,12,0))}
+  .search{flex:1;min-width:220px;display:flex;align-items:center;gap:10px;padding:0 14px;height:42px;border-radius:12px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line)}
+  .search input{flex:1;border:0;outline:0;background:transparent;color:var(--text);font:inherit}
+  .btn{height:38px;padding:0 14px;border:0;border-radius:11px;font:600 13px inherit;color:var(--text);background:var(--surface2);box-shadow:inset 0 0 0 1px var(--line);cursor:pointer}
+  .btn:hover{background:#232637}.btn:active{transform:translateY(1px)}
+  .btn.primary{background:linear-gradient(180deg,#1f9fd0,#157fb0);box-shadow:0 8px 22px rgba(76,201,240,.18);color:#fff}
+  .btn.primary:hover{filter:brightness(1.06)}
+  .btn.ghost{background:transparent}
+  .status{margin-left:auto;color:var(--muted);font-size:12px}
+  .status.ok{color:var(--ok)} .status.warn{color:var(--warn)} .status.err{color:var(--danger)}
+  .banner{display:flex;gap:12px;align-items:flex-start;padding:14px 16px;margin:8px 0 18px;border-radius:var(--radius);background:linear-gradient(180deg,rgba(76,201,240,.10),rgba(76,201,240,.04));box-shadow:inset 0 0 0 1px rgba(76,201,240,.18)}
+  .banner p{margin:0;color:#cfefff;font-size:13px}
+  .banner code{font:12px Consolas,monospace;background:rgba(0,0,0,.25);padding:1px 5px;border-radius:5px}
+  section{margin:18px 0 26px;scroll-margin-top:84px}
+  section>h2{display:flex;align-items:baseline;gap:10px;margin:0 8px 10px;font:600 20px/1.2 "Segoe UI Variable Display","Segoe UI",sans-serif;letter-spacing:-.01em}
+  section>h2 span{color:var(--dim);font:500 12px "Segoe UI",sans-serif}
+  .card{background:linear-gradient(180deg,rgba(27,29,40,.85),rgba(20,21,29,.9));border-radius:var(--radius);box-shadow:inset 0 0 0 1px var(--line), var(--shadow);overflow:hidden}
+  .row{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,340px);gap:16px;align-items:center;padding:14px 16px}
+  .row+.row{border-top:1px solid var(--line)}
+  .row:hover{background:rgba(255,255,255,.015)}
+  .row.hide{display:none}
+  .label b{display:block;font-size:14px;font-weight:600}
+  .label p{margin:3px 0 0;color:var(--muted);font-size:12.5px}
+  .label .key{margin-top:5px;color:var(--dim);font:11px Consolas,monospace}
+  .control{display:flex;justify-content:flex-end;align-items:center;gap:10px;min-width:0}
+  input[type=text],input[type=number],select,textarea{width:100%;max-width:340px;height:38px;padding:0 12px;border:1px solid var(--line);border-radius:10px;background:#0f1118;color:var(--text);font:inherit;outline:0}
+  textarea{height:auto;min-height:72px;padding:10px 12px;resize:vertical}
+  input:focus,select:focus,textarea:focus{border-color:rgba(76,201,240,.5);box-shadow:0 0 0 3px rgba(76,201,240,.12)}
+  input[type=color]{width:46px;height:36px;padding:2px;border:1px solid var(--line);border-radius:10px;background:#0f1118;cursor:pointer;flex:none}
+  .colorctl{display:flex;gap:8px;align-items:center;width:100%;max-width:340px}
+  .colorctl input[type=text]{flex:1}
+  .range{display:flex;gap:10px;align-items:center;width:100%;max-width:340px}
+  input[type=range]{flex:1;accent-color:var(--accent)}
+  .range output{min-width:46px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums;font-size:12px}
+  .sw{position:relative;width:46px;height:26px;flex:none}
+  .sw input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+  .sw span{position:absolute;inset:0;border-radius:13px;background:#3a3f55;transition:.2s}
+  .sw span::after{content:"";position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;box-shadow:0 2px 6px rgba(0,0,0,.35);transition:.22s cubic-bezier(.2,.8,.2,1)}
+  .sw input:checked+span{background:linear-gradient(180deg,#2fbf71,#22a85f)}
+  .sw input:checked+span::after{transform:translateX(20px)}
+  .sw input:focus-visible+span{box-shadow:0 0 0 3px rgba(76,201,240,.2)}
+  .empty{display:none;padding:28px;text-align:center;color:var(--muted)}
+  @media (max-width: 900px){.app{grid-template-columns:1fr}.side{position:relative;height:auto;border-right:0;border-bottom:1px solid var(--line)}.row{grid-template-columns:1fr}.control{justify-content:flex-start}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><div class="logo"><i></i></div><div><h1>Dynamic Island</h1><p>Settings · <span id="ver">standalone</span></p></div></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="meta"><b>island.ini</b> — edit values, then <b>Download island.ini</b> and replace the file next to <code>DynamicIsland.exe</code>. The island reloads settings live.</div>
+  </aside>
+  <main class="main">
+    <div class="top">
+      <label class="search" title="Filter settings"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="q" placeholder="Search settings…"></label>
+      <input id="file" type="file" accept=".ini,text/plain" hidden>
+      <button class="btn" id="loadBtn">Load island.ini</button>
+      <button class="btn ghost" id="resetBtn" title="Reset the form to built-in defaults">Defaults</button>
+      <button class="btn primary" id="saveBtn">Download island.ini</button>
+      <span class="status" id="status">No file loaded — using defaults</span>
+    </div>
+    <div class="banner"><p><b>Live reload:</b> save over <code>island.ini</code> next to the app and it picks up changes within about a second (no restart). Use <b>Load island.ini</b> to edit your current file. Keys are stored as <code>Section.Key=value</code> in the <code>[island]</code> section.</p></div>
+    <div id="sections"></div>
+    <div class="empty card" id="empty">No settings match your search.</div>
+  </main>
+</div>
+<script>
+const SPEC = [
+  { id:'appearance', title:'Appearance & Position', items:[
+    S('Appearance.Position','Position','Where the island should appear on your screen.','select','top-center',[['top-center','Top center'],['top-left','Top left'],['top-right','Top right'],['bottom-center','Bottom center'],['bottom-left','Bottom left'],['bottom-right','Bottom right']]),
+    S('Appearance.TargetMonitor','Target Monitor',"Select the screen to display the island. If a display isn't found, it safely falls back to the Primary Monitor. (Extra displays are given even if they don't exist because Windhawk settings are static.)",'select','primary',[['primary','Primary monitor'],['1','Display 1'],['2','Display 2'],['3','Display 3'],['4','Display 4'],['5','Display 5'],['follow','Follow mouse']]),
+    S('Appearance.OffsetX','Offset X','Adjust the horizontal position (in pixels). Positive values move it right, negative values move it left.','number',0,{min:-4000,max:4000,step:1}),
+    S('Appearance.OffsetY','Offset Y','Adjust the vertical position (in pixels). Positive values move it down, negative values move it up. Applies to every state unless a separate expanded offset is turned on.','number',0,{min:-4000,max:4000,step:1}),
+    S('Appearance.SeparateExpandedOffsetY','Use a separate Offset Y when expanded','Lets the island sit at one height while collapsed and a different one while expanded.','bool',false),
+    S('Appearance.OffsetYExpanded','Offset Y (expanded)','Vertical position in pixels while the island is expanded. Only used when the separate expanded offset is on.','number',0,{min:-4000,max:4000,step:1}),
+    S('Appearance.BorderMergedMode','Border-Merged Mode','Attach the island flush to the top edge of the monitor without a floating gap.','bool',false),
+    S('Appearance.ShapeStyle','Island Shape Style','Change the overall shape of the island (Pill, Windows 11, or macOS Notch).','select','default',[['default','Pill (default)'],['w11','Windows 11'],['notch','macOS Notch']]),
+    S('Appearance.ProgressStyle','Progress bar style','Look of the song progress bar in the expanded media player. Wavy and Squiggle animate while music is playing and flatten when paused.','select','slim',[['slim','Slim'],['wavy','Wavy'],['squiggle','Squiggle'],['bar','Bar (thick bar with a line thumb)']]),
+    S('Appearance.SpectrumStyle','Audio spectrum style','Look of the live audio visualizer next to the album art (collapsed pill and expanded player). Pulse Orb, Plasma Thread and Peak Matrix use a real frequency analysis of the system audio.','select','bars',[['bars','Classic Bars'],['led','Peak Matrix'],['plasma','Plasma Thread'],['orb','Pulse Orb']]),
+    S('Appearance.SizeScale','Size scale','Makes the entire island and its contents larger or smaller.','select','1.0',[['0.8','80%'],['0.9','90%'],['1.0','100%'],['1.1','110%'],['1.2','120%'],['1.3','130%'],['1.5','150%'],['1.8','180%'],['2.0','200%'],['2.5','250%']]),
+    S('Appearance.AutoDpiScale','Auto DPI scaling',"Automatically scales the island to match your monitor's DPI. Recommended for 4K screens.",'bool',true),
+  ]},
+  { id:'behavior', title:'Behavior & Visibility', items:[
+    S('Behavior.AlwaysOnTop','Always on top','Keeps the island above all other windows. Turn this off if it blocks other apps.','bool',true),
+    S('Behavior.ExpandOnHover','Expand on hover','Expand the island automatically when hovered. If disabled, click to expand.','bool',true),
+    S('Behavior.AutoHideIdleSeconds','Auto-hide island (all states)','Hide the island (including idle, media, and other states) after this many seconds of inactivity. 0 to disable.','number',0,{min:0,max:600,step:1}),
+    S('Behavior.AutoHideFullscreen','Hide on full screen','Automatically hide the island when playing a video or app in full screen mode.','bool',true),
+    S('Behavior.UnhideOnHover','Unhide on hover','Allow the hidden island to reappear when you hover your mouse over it.','bool',true),
+    S('Behavior.RunOnStartup','Run on startup (Windows)','Registers a per-user Windows startup entry so the island relaunches automatically after reboot. The entry follows the exe if you move it, and is removed when this is turned off.','bool',true),
+  ]},
+  { id:'animations', title:'Animations & Performance', items:[
+    S('Animations.TargetFPS','Refresh rate / FPS',"Set the animation frame rate. Choose Auto to dynamically match your active monitor's refresh rate (up to 360Hz/500Hz), or select a fixed FPS.",'select','auto',[['auto','Auto'],['30','30 FPS'],['60','60 FPS'],['90','90 FPS'],['120','120 FPS'],['144','144 FPS'],['165','165 FPS'],['240','240 FPS'],['360','360 FPS'],['500','500 FPS']]),
+    S('Animations.AnimationStyle','Animation bounciness / style','Control the spring physics and feel of the animation.','select','default',[['smooth','Smooth'],['default','Default'],['bouncy','Bouncy'],['snappy','Snappy']]),
+    S('Animations.AnimationSpeed','Animation speed','How fast the island expands and collapses.','select','normal',[['very-slow','Very slow'],['slow','Slow'],['normal','Normal'],['fast','Fast'],['very-fast','Very fast'],['ultra-fast','Ultra fast']]),
+    S('Animations.ExpandedMediaTransitions','Expanded player transitions','Animate the hover player when the song changes or you press a control — title, artist and album text, the cover flip, and the previous / next / play-pause buttons.','bool',false),
+    S('Animations.PillCoverSpin','Pill cover spin','Spin the album cover in the collapsed pill when the song changes. Turn off to swap the cover instantly.','bool',false),
+  ]},
+  { id:'theming', title:'Colors & Theming', items:[
+    S('Themes.ThemePreset','Theme preset','Select a curated color theme, or choose Custom to use your own colors below.','select','obsidian',[['obsidian','Obsidian (default)'],['graphite','Graphite'],['slate','Slate'],['nord','Nord'],['evergreen','Evergreen'],['espresso','Espresso'],['plum','Plum'],['porcelain','Porcelain (light)'],['custom','Custom']]),
+    S('Themes.PillOpacity','Pill transparency','35 to 100. Lower values make the island more see-through.','range',96,{min:35,max:100,step:1}),
+    S('Themes.TintIntensity','Background tint intensity','0 to 100. Controls how dark the background tint behind the island is.','range',72,{min:0,max:100,step:1}),
+    S('Themes.BackdropMaterial','Backdrop material (real Windows blur)','Paints genuine Windows blur or acrylic behind the island. Requires Windows 10 1803+ and Transparency effects ON.','select','none',[['none','Off'],['blur','Blur'],['acrylic','Acrylic']]),
+    S('Themes.BackdropFillOpacity','Backdrop fill opacity','0 to 100. Only used when a Backdrop material is enabled. How opaque the island’s own background stays on top of the blur.','range',45,{min:0,max:100,step:1}),
+    S('Themes.BackdropTint','Acrylic tint strength','0 to 100. How strongly your background colour tints the backdrop.','range',55,{min:0,max:100,step:1}),
+    S('Themes.MaterialDepth','Depth shading','Adds soft downward shading and the accent wash so the island has depth. Turn off for a flat look.','bool',true),
+    S('Themes.DropShadow','Soft drop shadow','Casts a soft shadow beneath the island to lift it off the desktop.','bool',true),
+    S('Themes.AccentBloom','Accent bloom intensity','0 to 200. Strength of the soft accent-coloured wash bleeding in from the top of the island.','range',100,{min:0,max:200,step:1}),
+    S('Themes.TextScale','Text size','70 to 160. Scales all island text independently of the overall Size scale.','range',100,{min:70,max:160,step:1}),
+    S('Themes.AccentColorMode','Accent color mode','How the glowing accent color is chosen. Auto extracts it from album art.','select','auto',[['auto','Auto (album art)'],['system','System accent'],['custom','Custom']]),
+    S('Themes.CustomAccentHex','Custom accent hex','The hex color to use when the accent mode is set to Custom.','color','#4cc9f0'),
+    S('Themes.CalendarAccent','Calendar accent color',"Accent color for the calendar's month name and today's marker.",'select','red',[['red','Default / accent mode'],['system','System accent']]),
+    S('Themes.ClockAccentGlow','Show clock background circle/glow','Display the soft accent circle/glow behind the time in the expanded clock view.','bool',true),
+    S('Themes.FontFamily','Font family','Custom font family for island text (e.g. Segoe UI, Arial, Aptos, Consolas). Leave empty for system default.','text',''),
+    S('Themes.ContourBorderMode','Contour border',"Choose the island's border style. Auto extracts the border color from album art; Borderless removes outer outlines.",'select','default',[['default','Default'],['auto','Auto (album art)'],['borderless','Borderless']]),
+    S('Themes.ContourBorderHex','Contour border hex color','Hex color for the island contour stroke.','color','#1E1E22'),
+    S('Themes.PillBgColor','Pill background color','Hex color for the island background. Accepts 3/4/6/8 hex digits (8-digit RRGGBBAA for translucent).','color','#08080A'),
+    S('Themes.TextPrimaryColor','Primary text color','Accessible hex color for titles and main text.','color','#FFFFFF'),
+    S('Themes.TextSecondaryColor','Secondary text color','Accessible hex color for artist names and muted labels.','color','#9B9BA5'),
+  ]},
+  { id:'privacy', title:'Privacy Indicators', items:[
+    S('Indicators.PrivacyDots','Show privacy indicators (Mic & Camera)','Master toggle to display the iOS-style privacy dots when microphone or camera is in use.','bool',true),
+    S('Indicators.PrivacyDotsMic','Show microphone indicator (Orange dot)','Show the orange dot when microphone is in use. Turn off if background apps keep it permanently active.','bool',true),
+    S('Indicators.PrivacyDotsMicHex','Microphone dot color','Custom hex color for microphone privacy indicator.','color','#FF9500'),
+    S('Indicators.PrivacyDotsCam','Show camera indicator (Green dot)','Show the green dot when webcam is in use.','bool',true),
+    S('Indicators.PrivacyDotsCamHex','Camera dot color','Custom hex color for camera privacy indicator.','color','#34C759'),
+  ]},
+  { id:'modules', title:'Modules & Features', note:'media, alerts, overlays, weather, lyrics, tray & more', items:[
+    S('Modules.Media','Media module','Shows album art, song info, and playback controls when music is playing.','bool',true),
+    S('Modules.MediaAutoExpand','Auto-expand on track change','Automatically expand the island when a new song or video starts playing.','bool',false),
+    S('Modules.MediaPillClock','Show clock in the collapsed media pill','While media is playing, the collapsed pill also shows the current time on the left.','bool',false),
+    S('Modules.Volume','Volume slider flyout','Shows a volume slider banner on the island when adjusting system volume.','bool',true),
+    S('Modules.Brightness','Brightness slider flyout','Shows a brightness slider banner when you change screen brightness (laptop built-in display).','bool',true),
+    S('Modules.CapsLock','Caps Lock module','Shows an indicator when Caps Lock or Num Lock state changes.','bool',true),
+    S('Modules.Battery','Battery module','Shows an alert when your laptop battery is running low.','bool',true),
+    S('Modules.BluetoothIndicator','Bluetooth connect/disconnect indicator','Shows a card with the device name, category icon, and battery level (if available) when a Bluetooth device connects or disconnects.','bool',true),
+    S('Modules.BluetoothShowBattery','Show Bluetooth battery level','Reads battery level over BLE GATT when the device supports it.','bool',true),
+    S('Modules.Progress','Progress module','Shows a progress ring around the island for downloads or file copies.','bool',true),
+    S('Modules.TimerModule','Focus Timer module',"Enables a Pomodoro-style focus/break timer, startable from the island's right-click menu.",'bool',true),
+    S('Modules.Clipboard','Clipboard module','Shows a quick preview of the text or images you just copied.','bool',true),
+    S('Modules.StatusCountdownProgress','Status countdown progress bar','Shows a subtle countdown progress bar at the bottom of temporary status alert cards.','bool',false),
+    S('Modules.DoNotDisturbIndicator','Do Not Disturb status alert','Shows a status alert card when Do Not Disturb is toggled in the Windows notification panel.','bool',true),
+    S('Modules.NotificationRespectDnD','Notifications respect Do Not Disturb','Suppresses Dynamic Island notification alerts when Windows Do Not Disturb is active.','bool',true),
+    S('Modules.HardwareMonitorModule','Include Hardware Monitor in scroll loop','Add CPU, GPU, RAM, FPS and Network stats card to mouse-wheel scroll loop.','bool',true),
+    S('Modules.GameOverlay','Enable game overlay mode','Replaces the clock with live stats like FPS, CPU, and RAM usage.','bool',false),
+    S('Modules.ShowMetricText','Show labels in metric chips','Adds text labels (like "CPU") inside the game overlay bars.','bool',false),
+    S('Modules.Weather','Weather module','Shows the weather on the right side of the pill. Turn off to only show the clock.','bool',true),
+    S('Modules.WeatherCity','Weather City (Optional)','Enter your city (e.g. London). Leave blank to use auto IP geolocation.','text',''),
+    S('Modules.WeatherFahrenheit','Use Fahrenheit','Display weather temperature and wind speed in imperial units.','bool',false),
+    S('Modules.MediaTabLyrics','Lyrics in the media tab','Adds a lyrics button to the media player controls to toggle an immersive lyrics view over the media tab.','bool',false),
+    S('Modules.Lyrics','Lyrics module','Shows synced lyrics for the current track (fetched from LRCLIB) while the island is expanded.','bool',false),
+    S('Modules.LyricsVisualizer','Show visualizer in Lyrics tab','Shows a small live audio waveform next to the Lyrics title while a track is playing.','bool',true),
+    S('Modules.KaraokeLyrics','Karaoke-style glow','Lights up the active lyric line progressively, left to right, in sync with the song.','bool',true),
+    S('Modules.KaraokeLetterGlow','Karaoke letter glow','As the karaoke light sweeps across the line, letters near the wipe boundary softly glow, then fade out behind it.','bool',true),
+    S('Modules.LyricsOffsetMs','Lyrics sync offset - speakers / wired (ms)','Fine-tunes lyric timing (-3000 to 3000). Positive = lyrics appear EARLIER, negative = LATER. Used when the default output is NOT Bluetooth.','number',0,{min:-3000,max:3000,step:1}),
+    S('Modules.LyricsOffsetBluetoothMs','Lyrics sync offset - Bluetooth output (ms)','Same range; used automatically while the default audio output is Bluetooth (usually needs a negative value).','number',0,{min:-3000,max:3000,step:1}),
+    S('Modules.LyricsNeighborLinesVisible','Show neighboring lyric lines clearly','By default the lines above and below the active line are only a faint ghost. Turn this on to make them clearly readable.','bool',false),
+    S('Modules.LyricsCache','Lyrics cache (disk)',"Instant lyrics, less load on LRCLIB. Stored in the mod's storage folder. Turn off to stop all lyrics disk reads and writes.",'bool',true),
+    S('Modules.LyricsCacheMaxMB','Lyrics cache size limit','Least recently used files are deleted once the cache grows past this.','select','25',[['10','10 MB'],['25','25 MB'],['50','50 MB'],['100','100 MB'],['0','Off']]),
+    S('Modules.Language','Language',"Language for the island's own text labels. Auto follows your Windows display language.",'select','auto',[['auto','Auto (Windows)'],['en','English'],['fr','French'],['es','Spanish'],['de','German'],['pt','Portuguese'],['it','Italian'],['ru','Russian'],['tr','Turkish'],['hi','Hindi'],['zh','Chinese'],['ja','Japanese'],['ko','Korean']]),
+    S('Modules.ClockFormat','Clock format','Choose 12-hour or 24-hour time, or follow your Windows locale setting.','select','system',[['system','System'],['12h','12-hour'],['24h','24-hour']]),
+    S('Modules.ShowSeconds','Show seconds on the clock','Include seconds in the expanded clock. Costs a little more CPU because the clock redraws every second.','bool',false),
+    S('Modules.DateFormat','Custom date format','Custom date pattern for the idle dashboard. Leave empty to follow your Windows locale. Supports yyyy, MM/M, dd/d, MMM/MMMM, ddd/dddd.','text',''),
+    S('Modules.DateFirst','Show date above the time','Swap the idle dashboard so the date is the headline and the time sits beneath it.','bool',false),
+    S('Modules.FirstDayOfWeek','First day of the week','Which weekday the calendar grid starts on. Auto follows your Windows regional format.','select','auto',[['auto','Auto (Windows)'],['sunday','Sunday'],['monday','Monday']]),
+    S('Modules.QuickLookup','Quick Lookup (hotkey)','Press the Quick Lookup hotkey to open a search box on the island. Searches go to Wiktionary/Wikipedia when you submit.','bool',false),
+    S('Modules.FileTrayModule','File Tray (drag & drop shelf)','Adds a File Tray card to the scroll loop. Drag files onto the island to park them there.','bool',false),
+    S('Modules.FileTrayMaxItems','File Tray capacity','1 to 25. How many files the shelf keeps before the oldest one drops off.','number',10,{min:1,max:25,step:1}),
+    S('Modules.FileTrayPersist','File Tray remembers items (disk)',"Keeps the tray's contents across restarts, in the mod's storage folder.",'bool',true),
+    S('Modules.MediaExpandBlocklist','Never auto-expand for these apps','Comma-separated list of app/site names that should never make the island expand on a track change (e.g. chrome, tiktok, youtube).','text',''),
+    S('Modules.GameOverlayShowFps','Game overlay - show FPS','Include the frame rate in the game overlay strip.','bool',true),
+    S('Modules.GameOverlayShowCpu','Game overlay - show CPU','Include CPU utilization in the game overlay strip.','bool',true),
+    S('Modules.GameOverlayShowGpu','Game overlay - show GPU','Include GPU utilization in the game overlay strip.','bool',true),
+    S('Modules.GameOverlayShowRam','Game overlay - show RAM','Include memory usage in the game overlay strip.','bool',true),
+    S('Modules.GameOverlayShowDisk','Game overlay - show disk','Include disk usage in the game overlay strip.','bool',true),
+    S('Modules.GameOverlayCompact','Game overlay - compact size','Shrink the game overlay to a narrow strip that fits neatly inside the taskbar area.','bool',false),
+  ]},
+  { id:'shortcuts', title:'Shortcuts & Hotkeys', items:[
+    S('Shortcuts.HideShowHotkeyEnabled',"Enable hide/show hotkey","Toggle the island's visibility instantly with a keyboard shortcut.",'bool',true),
+    S('Shortcuts.HideShowModifiers','Hotkey modifiers','Modifier keys combined with the letter/number key below.','select','ctrl_alt',[['ctrl_alt','Ctrl + Alt'],['ctrl_shift','Ctrl + Shift'],['alt_shift','Alt + Shift'],['win_alt','Win + Alt'],['ctrl_alt_shift','Ctrl + Alt + Shift']]),
+    S('Shortcuts.HideShowKey','Hotkey letter/number key','A single A-Z or 0-9 key combined with the modifiers above. Falls back to "D" if left blank or invalid.','text','D'),
+    S('Shortcuts.LookupModifiers','Quick Lookup hotkey modifiers','Modifier keys combined with the Quick Lookup key below.','select','ctrl_alt',[['ctrl_alt','Ctrl + Alt'],['ctrl_shift','Ctrl + Shift'],['alt_shift','Alt + Shift'],['win_alt','Win + Alt']]),
+    S('Shortcuts.LookupKey','Quick Lookup hotkey key','Type Space, or a single A-Z or 0-9 key. Falls back to Space if left blank or invalid.','text','Space'),
+    S('Shortcuts.ClickThroughHotkeyEnabled','Enable click-through hotkey','Toggle click-through with a keyboard shortcut: while on, the background receives mouse pointers, hover and clicks (even when the island is expanded), and pill transparency drops to 30%. Press it again to restore.','bool',true),
+    S('Shortcuts.ClickThroughModifiers','Click-through hotkey modifiers','Modifier keys combined with the click-through key below.','select','ctrl',[['ctrl','Ctrl'],['ctrl_shift','Ctrl + Shift'],['alt_shift','Alt + Shift'],['win_alt','Win + Alt'],['ctrl_alt','Ctrl + Alt'],['ctrl_alt_shift','Ctrl + Alt + Shift']]),
+    S('Shortcuts.ClickThroughKey','Click-through hotkey key','A single A-Z or 0-9 key combined with the modifiers above. Falls back to "B" if left blank or invalid.','text','B'),
+  ]},
+  { id:'coding', title:'Coding Activity (standalone)', note:'shown in your standalone build', items:[
+    S('Indicators.CodingDot','Show coding activity dot','Show a dot when configured coding/agent apps are active.','bool',true),
+    S('Indicators.CodingDotHex','Coding dot color','Custom hex color for the coding activity indicator.','color','#7C5CFF'),
+    S('Indicators.CodingShowName','Show active app name','Display the detected coding app name alongside the indicator.','bool',true),
+    S('Indicators.CodingTab','Show Coding tab','Include the Coding tab in the expanded island.','bool',true),
+    S('Indicators.CodingList','Detected coding apps','Semicolon-separated process patterns; use name|Label to set a display name (e.g. opencode|OpenCode;cursor.exe|Cursor).','textarea','opencode|OpenCode;claude|Claude;codex|Codex;gemini|Gemini;aider|Aider;kilo|Kilo Code;chatgpt.exe|ChatGPT;code.exe|VS Code;cursor.exe|Cursor;windsurf.exe|Windsurf;antigravity|Antigravity;vscode|VS Code;legion|Legion;copilot|Copilot;hermes|Hermes'),
+  ]},
+];
+
+function S(key,name,desc,type,def,extra){ return {key,name,desc,type,def,extra}; }
+const state = new Map();
+const defaults = new Map(SPEC.flatMap(sec => sec.items.map(it => [it.key, it.def])));
+
+function norm(key, v){
+  const it = findItem(key), d = defaults.get(key);
+  if (v == null || v === '') return d;
+  if (it?.type === 'bool') return (v === '1' || v === 1 || v === true || String(v).toLowerCase()==='true');
+  if (it?.type === 'number' || it?.type === 'range') { const n = Number(v); return Number.isFinite(n) ? n : d; }
+  return String(v);
+}
+function findItem(key){ for (const sec of SPEC) for (const it of sec.items) if (it.key===key) return it; }
+function toIniValue(key, v){
+  const it = findItem(key);
+  if (it?.type === 'bool') return v ? '1' : '0';
+  return v == null ? '' : String(v);
+}
+
+function parseIni(text){
+  const map = new Map();
+  for (let line of text.replace(/^\uFEFF/, '').split(/\r?\n/)){
+    line = line.trim();
+    if (!line || line.startsWith(';') || line.startsWith('#') || line.startsWith('[')) continue;
+    const i = line.indexOf('=');
+    if (i < 0) continue;
+    const k = line.slice(0,i).trim(), v = line.slice(i+1).trim();
+    if (k) map.set(k, v);
+  }
+  return map;
+}
+
+function buildIni(){
+  const out = ['[island]', '; Dynamic Island for Windows - settings', '; Saved by settings.html. The island reloads live (~1 s).', '; Boolean: 1 = on, 0 = off.', ''];
+  for (const sec of SPEC){
+    out.push('; ' + sec.title);
+    for (const it of sec.items) out.push(it.key + '=' + toIniValue(it.key, state.has(it.key) ? state.get(it.key) : it.def));
+    out.push('');
+  }
+  // preserve unknown keys the app may use
+  for (const [k,v] of state) if (!defaults.has(k)) out.push(k + '=' + v);
+  return out.join('\r\n') + '\r\n';
+}
+
+function setStatus(msg, cls){ const s=document.getElementById('status'); s.textContent=msg; s.className='status '+(cls||''); }
+
+function render(){
+  const nav = document.getElementById('nav'), root = document.getElementById('sections');
+  nav.innerHTML=''; root.innerHTML='';
+  for (const sec of SPEC){
+    const nb = document.createElement('button'); nb.innerHTML = `<span class="dot"></span>${sec.title}`;
+    nb.onclick = () => document.getElementById(sec.id).scrollIntoView({behavior:'smooth',block:'start'});
+    nav.append(nb);
+    const section = document.createElement('section'); section.id = sec.id;
+    const h2 = document.createElement('h2'); h2.innerHTML = `${sec.title}${sec.note?` <span>${sec.note}</span>`:''}`; section.append(h2);
+    const card = document.createElement('div'); card.className='card';
+    for (const it of sec.items) card.append(rowFor(it));
+    section.append(card); root.append(section);
+  }
+  syncNav();
+}
+
+function rowFor(it){
+  const row = document.createElement('div'); row.className='row'; row.dataset.key=it.key; row.dataset.search=(it.name+' '+it.desc+' '+it.key).toLowerCase();
+  const label = document.createElement('div'); label.className='label';
+  label.innerHTML = `<b></b><p></p><div class="key"></div>`;
+  label.querySelector('b').textContent = it.name; label.querySelector('p').textContent = it.desc; label.querySelector('.key').textContent = it.key;
+  const control = document.createElement('div'); control.className='control';
+  const val = () => state.has(it.key) ? state.get(it.key) : it.def;
+  const set = v => { state.set(it.key, norm(it.key, v)); };
+
+  if (it.type==='bool'){
+    const sw = document.createElement('label'); sw.className='sw';
+    sw.innerHTML = `<input type="checkbox"><span></span>`;
+    const cb = sw.querySelector('input'); cb.checked = !!val();
+    cb.onchange = () => set(cb.checked);
+    it._apply = v => { cb.checked = !!v; };
+    control.append(sw);
+  } else if (it.type==='select'){
+    const sel = document.createElement('select');
+    for (const [v,l] of it.extra) { const o=document.createElement('option'); o.value=v; o.textContent=l; sel.append(o); }
+    sel.value = String(val());
+    sel.onchange = () => set(sel.value);
+    it._apply = v => { sel.value = String(v); };
+    control.append(sel);
+  } else if (it.type==='range' || it.type==='number'){
+    const wrap = document.createElement('div'); wrap.className = it.type==='range' ? 'range' : 'colorctl';
+    const inp = document.createElement('input');
+    inp.type = it.type==='range' ? 'range' : 'number';
+    if (it.extra){ if (it.extra.min!=null) inp.min=it.extra.min; if (it.extra.max!=null) inp.max=it.extra.max; if (it.extra.step!=null) inp.step=it.extra.step; }
+    inp.value = val();
+    const out = document.createElement('output'); out.textContent = inp.value;
+    inp.oninput = () => { out.textContent = inp.value; set(inp.value); };
+    it._apply = v => { inp.value = v; out.textContent = v; };
+    if (it.type==='range') wrap.append(inp,out); else { inp.style.maxWidth='340px'; control.append(inp); }
+    if (it.type==='range') control.append(wrap);
+  } else if (it.type==='color'){
+    const wrap = document.createElement('div'); wrap.className='colorctl';
+    const cp = document.createElement('input'); cp.type='color';
+    const tx = document.createElement('input'); tx.type='text'; tx.spellcheck=false;
+    const v = String(val()||'#000000'); tx.value = v; cp.value = v.slice(0,7);
+    const sync = from => { if(from==='cp'){ tx.value=cp.value; set(cp.value); } else { const x=tx.value.trim(); set(x); if(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(x)) cp.value = x.length===4 ? '#'+x[1]+x[1]+x[2]+x[2]+x[3]+x[3] : x; } };
+    cp.oninput = () => sync('cp'); tx.oninput = () => sync('tx');
+    it._apply = nv => { tx.value = nv; if(/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(nv)) cp.value = nv.length===4 ? '#'+nv[1]+nv[1]+nv[2]+nv[2]+nv[3]+nv[3] : nv; };
+    wrap.append(cp,tx); control.append(wrap);
+  } else if (it.type==='textarea'){
+    const ta = document.createElement('textarea'); ta.value = String(val()??''); ta.oninput = () => set(ta.value);
+    it._apply = v => { ta.value = v??''; }; control.append(ta);
+  } else {
+    const inp = document.createElement('input'); inp.type='text'; inp.value = String(val()??''); inp.oninput = () => set(inp.value);
+    it._apply = v => { inp.value = v??''; }; control.append(inp);
+  }
+  row.append(label, control); return row;
+}
+
+function applyAllFromState(){
+  for (const sec of SPEC) for (const it of sec.items) if (it._apply) it._apply(state.has(it.key) ? state.get(it.key) : it.def);
+}
+
+function loadText(text, name){
+  const map = parseIni(text);
+  state.clear();
+  for (const [k,v] of map) state.set(k, norm(k,v));
+  applyAllFromState();
+  setStatus(`Loaded ${name||'island.ini'} (${map.size} keys)`, 'ok');
+}
+
+async function tryAutoLoad(){
+  try {
+    const r = await fetch('./island.ini', {cache:'no-store'});
+    if (!r.ok) throw 0;
+    loadText(await r.text(), 'island.ini');
+  } catch { /* file:// may block; user can load manually */ }
+}
+
+// One-click save: when this page is served by DynamicIsland.exe's loopback
+// settings server, the Save button POSTs straight to island.ini (a file://
+// page can't write files silently, so it falls back to download-and-replace).
+let serverMode = false;
+
+async function detectServer(){
+  if (location.protocol !== 'http:') return;
+  try {
+    const r = await fetch('ping', {cache:'no-store'});
+    if (r.ok && (await r.text()).trim() === 'island-settings-server') serverMode = true;
+  } catch { /* not served by the app */ }
+  if (serverMode){
+    document.getElementById('saveBtn').textContent = 'Save to island.ini';
+    document.querySelector('.banner p').innerHTML = '<b>Live save:</b> the island itself is serving this page, so <b>Save to island.ini</b> writes your changes straight to disk and they apply within about a second. Keys are stored as <code>Section.Key=value</code> in the <code>[island]</code> section.';
+    document.querySelector('.meta').innerHTML = '<b>Server mode</b> — this page is served by DynamicIsland.exe and saves island.ini directly (one click, no download).';
+  }
+}
+
+function downloadIni(){
+  const blob = new Blob([buildIni()], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'island.ini'; a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href), 1500);
+  setStatus('Downloaded island.ini — replace the file next to DynamicIsland.exe', 'ok');
+}
+
+document.getElementById('loadBtn').onclick = () => document.getElementById('file').click();
+document.getElementById('file').onchange = async e => { const f=e.target.files[0]; if(f) loadText(await f.text(), f.name); e.target.value=''; };
+document.getElementById('resetBtn').onclick = () => { state.clear(); applyAllFromState(); setStatus('Reset to defaults (not saved)', 'warn'); };
+document.getElementById('saveBtn').onclick = async () => {
+  if (serverMode){
+    try {
+      const r = await fetch('island.ini', {method:'POST', headers:{'Content-Type':'text/plain;charset=utf-8'}, body: buildIni()});
+      if (!r.ok) throw 0;
+      setStatus('Saved to island.ini — the island applies it within ~1 s', 'ok');
+      return;
+    } catch {
+      setStatus('Save failed — downloading instead', 'warn');
+    }
+  }
+  downloadIni();
+};
+
+document.getElementById('q').oninput = e => {
+  const q = e.target.value.trim().toLowerCase();
+  let any=false;
+  for (const row of document.querySelectorAll('.row')){ const show=!q||row.dataset.search.includes(q); row.classList.toggle('hide',!show); any=any||show; }
+  for (const sec of document.querySelectorAll('section')) sec.style.display = sec.querySelector('.row:not(.hide)') ? '' : 'none';
+  document.getElementById('empty').style.display = any ? 'none' : 'block';
+};
+
+const obs = new IntersectionObserver(entries => {
+  for (const en of entries) if (en.isIntersecting) {
+    document.querySelectorAll('.nav button').forEach((b,i)=>b.classList.toggle('on', SPEC[i]?.id===en.target.id));
+  }
+},{rootMargin:'-30% 0px -60% 0px'});
+function syncNav(){ document.querySelectorAll('section').forEach(s=>obs.observe(s)); }
+
+document.body.addEventListener('dragover', e=>e.preventDefault());
+document.body.addEventListener('drop', async e=>{ e.preventDefault(); const f=e.dataTransfer.files[0]; if(f) loadText(await f.text(), f.name); });
+
+render();
+detectServer().then(tryAutoLoad);
+</script>
+</body>
+</html>
