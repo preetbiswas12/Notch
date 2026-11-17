@@ -12,7 +12,7 @@ self-contained executable with a built-in settings dashboard, a persistent
 **Ctrl+B click-through mode**, and automatic **run-on-startup**.
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/devcode90/Dynamic-Island-for-Windows/793cf954d51aa9748c39d544187fab6e25ecd0fb/previews/desktop.png" alt="Dynamic Island on the desktop" width="640">
+  <img src="assets/home.png" width="640">
 </p>
 
 ---
