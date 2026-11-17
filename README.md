@@ -6,8 +6,7 @@ notifications, battery, camera/mic, and coding agents, renders natively with
 Direct2D at up to 360–500 FPS, and lives above every window — or disappears
 entirely behind your clicks.
 
-Based on the Windhawk mod [**Dynamic Island for Windows**](https://github.com/devcode90/Dynamic-Island-for-Windows)
-by [Himanshu (devcode90)](https://github.com/devcode90) (MIT), rebuilt here as a
+Based on the Windhawk mod, rebuilt here as a
 self-contained executable with a built-in settings dashboard, a persistent
 **Ctrl+B click-through mode**, and automatic **run-on-startup**.
 
