@@ -6,8 +6,7 @@ notifications, battery, camera/mic, and coding agents, renders natively with
 Direct2D at up to 360–500 FPS, and lives above every window — or disappears
 entirely behind your clicks.
 
-Based on the Windhawk mod [**Dynamic Island for Windows**](https://github.com/devcode90/Dynamic-Island-for-Windows)
-by [Himanshu (devcode90)](https://github.com/devcode90) (MIT), rebuilt here as a
+Based on the Windhawk mod, rebuilt here as a
 self-contained executable with a built-in settings dashboard, a persistent
 **Ctrl+B click-through mode**, and automatic **run-on-startup**.
 
@@ -117,8 +116,7 @@ immediately.
 
 ## Build from source
 
-Requirements: Windows 10/11 and [Windhawk](https://windhawk.net/) (only for its
-bundled Clang 20 toolchain — no Windhawk runtime is used).
+Requirements: Windows 10/11 and .
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File standalone\build.ps1
@@ -147,9 +145,6 @@ assets/                                 screenshots
 
 ## Credits & license
 
-- **Original mod:** [Dynamic Island for Windows](https://github.com/devcode90/Dynamic-Island-for-Windows)
-  by [Himanshu (devcode90)](https://github.com/devcode90), with contributions from
-  [Sarthak Singh](https://github.com/sarthakaksh) — MIT.
 - **Standalone build, settings dashboard, click-through mode, startup integration:**
   [Preet Biswas](https://github.com/preetbiswas12).
 - **Agents tab** inspired by [Agent Notch](https://github.com/KurianJose7586/notch).
