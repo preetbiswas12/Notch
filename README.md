@@ -77,7 +77,7 @@ and per-element animation speeds.
 
 | Shortcut | Action | Notes |
 |---|---|---|
-| **Ctrl+B** | Toggle **click-through mode** | Passes hover/clicks through to whatever is under the pill — even expanded — and fades it to 30%. Press again to restore. |
+| **Ctrl+B** | Toggle **click-through mode** | Passes hover/clicks through to whatever is under the pill — even expanded — and fades it to 30%. Press again to restore. See the demo below. |
 | **Ctrl + hover** | Momentary click-through | Same as above, only while held. |
 | **Ctrl+Alt+D** | Hide / show the island | Instant, zero CPU while hidden. |
 | **Ctrl+Alt+Space** | Quick Lookup search | Requires `Modules.QuickLookup`; results from Wiktionary/Wikipedia. |
@@ -87,6 +87,19 @@ and per-element animation speeds.
 
 Every hotkey is **remappable** in the settings page under **Shortcuts &
 Hotkeys** (enable/disable, modifier combos, key) and applies live after save.
+
+<details>
+<summary><b>Ctrl+B click-through demo</b></summary>
+
+<p align="center">
+  <video src="assets/video.mp4" controls width="640" style="border-radius:12px"></video>
+</p>
+
+Press **Ctrl+B** to toggle click-through mode — the island becomes transparent to
+mouse clicks (even while expanded) so you can click through to whatever's behind
+it. Press again to restore normal interaction.
+
+</details>
 
 ## Settings — one-click save
 
